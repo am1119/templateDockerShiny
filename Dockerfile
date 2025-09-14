@@ -36,14 +36,15 @@ RUN Rscript -e "options(repos = c(CRAN = 'https://cran.r-project.org')); install
     # install the package itself
     Rscript -e "BiocManager::install('scRNAseqApp')"
 
+RUN Rscript -e "install.packages('remotes'); remotes::install_github('timoast/signac')"
 
 ENV APP_DIR="/app/scRNAseqApp_project"
 ENV DATA_DIR="/app/scRNAseqApp_project/data"
 
 USER root
 
-RUN mkdir -p /app/scRNAseqApp_project /app/scRNAseqApp_project/data /app/extdata
-RUN chown rstudio:rstudio /app/scRNAseqApp_project /app/scRNAseqApp_project/data /app/extdata
+RUN mkdir -p $APP_DIR $DATA_DIR
+RUN chown rstudio:rstudio $APP_DIR $DATA_DIR
 
 
 # Switch to rstudio user for runtime
@@ -51,7 +52,7 @@ USER rstudio
 
 # Add the app setup script
 ADD app_setup.R $APP_DIR/app_setup.R
-COPY /extdata/ /app/extdata/
+COPY /extdata/ $APP_DIR/extdata/
 
 # Expose Shiny port
 EXPOSE 3838
