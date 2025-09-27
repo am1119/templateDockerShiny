@@ -1,10 +1,21 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_19
 
+# get the get put functions
+# Update the package lists and install Python and pip
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    && apt-get clean
+
+
+# Install Python dependencies using pip
+RUN pip3 install galaxy-ie-helpers
+
 # install Bioc
 RUN Rscript -e "options(repos = c(CRAN = 'https://cran.r-project.org')); install.packages('BiocManager')" && \
     Rscript -e "BiocManager::install(ask=FALSE)" && \
     # install the package itself
-    Rscript -e "BiocManager::install('scRNAseqApp')"
+    Rscript -e "options(repos = c(CRAN = 'https://cran.r-project.org')); options(Ncpus = 2); BiocManager::install('scRNAseqApp')"
 
 RUN Rscript -e "install.packages('remotes'); remotes::install_github('timoast/signac')"
 

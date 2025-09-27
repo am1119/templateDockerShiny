@@ -20,7 +20,7 @@ pbmc <- readRDS(pbmc_rds)
 appconf <- createAppConfig(
   title="pbmc small protected",
   destinationFolder = "pbmc_protected",
-  species = "Homo sapiens",
+  species = "Homo sapiensn",
   doi="10.1038/nbt.3192",
   datatype = "scRNAseq")
 createDataSet(appconf, pbmc, LOCKER = TRUE,
