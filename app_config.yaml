@@ -1,0 +1,9 @@
+app_dir: /app/scRNAseqApp_project
+data_dir: /app/scRNAseqApp_project/data
+input_file: pbmc_signac_sub.rds
+title: pbmc_signac_sub
+destinationFolder: pbmc_signac_sub
+species: Homo sapiens
+doi: 10.1038/nbt.3192
+datatype: scRNAseq
+locker: true
