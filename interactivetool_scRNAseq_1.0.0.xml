@@ -1,0 +1,100 @@
+<tool id="interactive_tool_scrnaseq" tool_type="interactive" name="Interactive scRNAseqApp Environment" version="1.0.0">
+  <requirements>
+    <container type="docker">anmq1992072/scrnaseqapp:latest</container>
+  </requirements>
+
+  <entry_points>
+    <entry_point name="scRNAseqApp" requires_domain="true">
+      <port>3838</port>
+    </entry_point>
+  </entry_points>
+
+  <stdio>
+    <regex match="WARNING" source="both" level="warning" description="scRNAseq warnings" />
+  </stdio>
+
+  <command><![CDATA[
+# Prepare runtime configuration for the app from Galaxy parameters
+set -ex
+
+# switch to the app directory inside the image so relative paths (extdata, app_config.yaml)
+# match where app_setup.R was installed by the Dockerfile
+cd /app/scRNAseqApp_project || exit 1
+
+# Debugging: print working dir and environment to job stdout so logs show what's happening
+pwd
+ls -la
+echo "--- ENV ---"
+env
+echo "--- END ENV ---"
+
+# Ensure extdata exists and copy the input dataset there (if provided)
+mkdir -p extdata
+if [ -n "$input" ]; then
+  # use external basename; escape $ so Galaxy's templating (Cheetah) does not interpret $() as a placeholder
+  cp "$input" extdata/"\$(basename \"$input\")"
+  INPUT_BASENAME="\$(basename \"$input\")"
+else
+  INPUT_BASENAME=""
+fi
+
+# Determine which input filename to record in the config
+if [ -n "\$INPUT_BASENAME" ]; then
+  INPUT_FOR_CONFIG="\$INPUT_BASENAME"
+else
+  INPUT_FOR_CONFIG="$input_file"
+fi
+
+# Create an app_config.yaml that app_setup.R will read by default
+cat > app_config.yaml <<YAML
+app_dir: /app/scRNAseqApp_project
+data_dir: /app/scRNAseqApp_project/data
+input_file: \${INPUT_FOR_CONFIG}
+title: ${title}
+destinationFolder: ${destinationFolder}
+species: ${species}
+doi: ${doi}
+locker: true
+YAML
+
+# Export environment variables as well so app_setup.R can pick them up from Sys.getenv()
+export INPUT_FILE="\${INPUT_FOR_CONFIG}"
+export TITLE="${title}"
+export DESTINATION_FOLDER="${destinationFolder}"
+export SPECIES="${species}"
+export DOI="${doi}"
+
+echo "Listing /app/scRNAseqApp_project:"
+ls -la /app/scRNAseqApp_project
+echo "Rscript location:"
+which Rscript || echo "Rscript not found"
+id
+
+# Run the app setup (this should start and block while the interactive app runs)
+Rscript /app/scRNAseqApp_project/app_setup.R
+]]></command>
+
+  <inputs>
+    <!-- the dataset to use (Galaxy will pass the dataset path as $input) -->
+    <param name="input" type="data" format="rds" label="Input RDS dataset" />
+
+    <!-- additional parameters (editable by the user in the Galaxy tool form) -->
+    <param name="input_file" type="text" value="pbmc_signac_sub.rds" label="Input file name (in container)" />
+    <param name="title" type="text" value="pbmc_signac_sub" label="App title" />
+    <param name="destinationFolder" type="text" value="pbmc_signac_sub" label="Destination folder" />
+    <param name="species" type="text" value="Homo sapiens" label="Species" />
+    <param name="doi" type="text" value="10.1038/nbt.3192" label="DOI" />
+  </inputs>
+
+  <outputs>
+  </outputs>
+
+  <tests>
+  </tests>
+
+  <help><![CDATA[
+Launch the interactive scRNAseq Shiny application inside a Docker container. You can supply an RDS dataset as `Input RDS dataset` and override app settings using the form fields.
+
+The wrapper will copy the uploaded dataset to `extdata/` inside the container and create an `app_config.yaml` file from the form parameters. The R script `app_setup.R` reads that config file (or environment variables) to start the app.
+]]></help>
+</tool>

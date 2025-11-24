@@ -13,12 +13,13 @@ if (file.exists(cfg_path)) config <- yaml::read_yaml(cfg_path)
 
 publish_folder <- config$app_dir %||% Sys.getenv("APP_DIR")
 data_folder <- config$data_dir %||% Sys.getenv("DATA_DIR")
-parse_title <- config$title %||% Sys.getenv("TITLE") 
-parse_doi <- config$doi %||% Sys.getenv("DOI") %||% "10.1038/nbt.3192"
-parse_datatype <- config$datatype %||% Sys.getenv("DATATYPE") %||% "scRNAseq"
-parse_species <- config$species %||% Sys.getenv("SPECIES") %||% "Homo sapiens"
-parse_destinationFolder <- config$destinationFolder %||% Sys.getenv("DESTINATION_FOLDER") %||% "pbmc_signac_sub"
-parse_inputfile <- config$input_file %||% Sys.getenv("INPUT_FILE") %||% "extdata/pbmc_signac_sub.rds"
+parse_title <- Sys.getenv("TITLE") %||% config$title
+parse_doi <- config$doi %||% "10.1038/nbt.3192"
+parse_datatype <- Sys.getenv("DATATYPE")  %||%  config$datatype
+parse_species <- Sys.getenv("SPECIES") %||% config$species
+parse_destinationFolder <- Sys.getenv("TITLE") %||% config$destinationFolder
+parse_inputfile <- Sys.getenv("INPUT_FILE") %||% config$input_file
+#%||% "extdata/pbmc_signac_sub.rds"
 # publish_folder=Sys.getenv("APP_DIR")
 # data_folder=Sys.getenv("DATA_DIR")
 
@@ -36,7 +37,7 @@ appconf <- createAppConfig(
   species = parse_species,
   doi = parse_doi,
   datatype = parse_datatype)
-createDataSet(appconf, pbmc, LOCKER = TRUE,
+createDataSet(appconf, pbmc, LOCKER = FALSE,
               datafolder = data_folder)
 dir(file.path(data_folder, parse_destinationFolder))
 scRNAseqApp(app_path = publish_folder)

@@ -114,3 +114,35 @@ docker run -p 8080:3838 -v /full_path/my_host_inputs/:/shiny_input -v /full_path
 
 
 
+## Docker credentials and recommended workflow
+
+This repository's `Makefile` includes a `hub_login` recipe that expects a Docker registry password or token to be provided non-interactively. Prefer the environment-based workflow (CI-friendly) and avoid committing secrets to the repo.
+
+Recommended (CI / secure): provide credentials via an environment variable and pipe it to `docker login`:
+
+```bash
+# one-off
+DOCKER_PASSWORD='your_token_here' USERNAME='your_username' make hub_login
+
+# or export in your shell / CI secrets
+export DOCKER_PASSWORD='your_token_here'
+export USERNAME='your_username'
+make hub_login
+```
+
+Local fallback (not recommended for repositories): create a `.password` file containing only the secret and make it readable only by you:
+
+```bash
+printf '%s' 'your_token_here' > .password
+chmod 600 .password
+make hub_login
+rm -f .password
+```
+
+Security notes
+- Use a short-lived or limited-scope access token rather than your account password when possible.
+- Add `.password` to `.gitignore` (already included in this repo) so it is not committed.
+- Prefer CI secret stores (GitHub Actions secrets, GitLab CI variables, etc.) instead of files on disk.
+
+
+

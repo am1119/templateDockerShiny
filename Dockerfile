@@ -20,6 +20,20 @@ RUN Rscript -e "options(repos = c(CRAN = 'https://cran.r-project.org')); install
     Rscript -e "install.packages('yaml', repos='https://cran.r-project.org')" && \
     Rscript -e "install.packages('remotes'); remotes::install_github('timoast/signac')"
 
+# provide a build-time arg with a default
+ARG SPECIES="Homo sapiens"
+ARG TITLE="pbmc_signac_sub"
+ARG DATATYPE="scRNAseq"
+ARG INPUT_FILE="pbmc_signac_sub.rds"
+ARG PORT=3838
+
+# persist it as an environment variable visible at runtime
+ENV SPECIES=${SPECIES}
+ENV TITLE=${TITLE}
+ENV DATATYPE=${DATATYPE}
+ENV INPUT_FILE=${INPUT_FILE}
+ENV PORT=${PORT}
+
 ENV APP_DIR="/app/scRNAseqApp_project"
 ENV DATA_DIR="/app/scRNAseqApp_project/data"
 
@@ -40,7 +54,7 @@ COPY /extdata/ $APP_DIR/extdata/
 COPY app_config.yaml $APP_DIR/app_config.yaml
 
 # Expose Shiny port
-EXPOSE 3838
+EXPOSE ${PORT}
 
 WORKDIR $APP_DIR
 
